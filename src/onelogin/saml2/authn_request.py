@@ -88,6 +88,19 @@ class OneLogin_Saml2_Authn_Request(object):
                     requested_authn_context_str += '<saml:AuthnContextClassRef>%s</saml:AuthnContextClassRef>' % authn_context
                 requested_authn_context_str += '    </samlp:RequestedAuthnContext>'
 
+        scoping_str = ''
+        if 'scopingIdpList' in sp_data:
+            scoping_idp_str = ''
+            for idp in sp_data['scopingIdpList']:
+                scoping_idp_str += '            <samlp:IDPEntry ProviderID="%s" />' % idp
+
+            scoping_str = '''\
+    <samlp:Scoping>
+        <samlp:IDPList>
+            %s
+        </samlp:IDPList>
+    </samlp:Scoping>''' % scoping_idp_str
+
         request = """<samlp:AuthnRequest
     xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
     xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
@@ -105,6 +118,7 @@ class OneLogin_Saml2_Authn_Request(object):
         Format="%(name_id_policy)s"
         AllowCreate="true" />
 %(requested_authn_context_str)s
+%(scoping_str)s
 </samlp:AuthnRequest>""" % \
             {
                 'id': uid,
@@ -117,6 +131,7 @@ class OneLogin_Saml2_Authn_Request(object):
                 'entity_id': sp_data['entityId'],
                 'name_id_policy': name_id_policy_format,
                 'requested_authn_context_str': requested_authn_context_str,
+                'scoping_str': scoping_str,
             }
 
         self.__authn_request = request
